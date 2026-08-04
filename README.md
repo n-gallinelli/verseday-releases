@@ -25,7 +25,10 @@ first.
 VerseDay stores everything locally on your Mac. Your tasks, notes, and calendar
 data never leave the device.
 
-The app makes exactly one kind of network request: an update check that fetches
-the static `latest.json` in this repository. It sends no version, no platform,
-no identifier, and no personal data. As with any web request, it does reach
-GitHub with your IP address and User-Agent, which GitHub logs.
+**As of today, VerseDay makes no network requests at all.**
+
+A future version will add an update check that fetches the static `latest.json`
+in this repository. When it ships, that check will send no version, no platform,
+no identifier, and no personal data. As with any web request, it will reach
+GitHub with your IP address and User-Agent, which GitHub logs. This section will
+be updated to say so in the present tense when that version is released.
