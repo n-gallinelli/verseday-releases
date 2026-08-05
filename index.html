@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VerseDay — know where the day actually went</title>
+<meta name="description" content="A Mac app that plans your day, times the work you really do, and closes it out. Free, local, no account.">
+<meta property="og:title" content="VerseDay">
+<meta property="og:description" content="Know where the day actually went. Free Mac app. No account, no cloud.">
+<meta property="og:type" content="website">
+<style>
+/* ---- tokens ------------------------------------------------------------ */
+:root{
+  --ground:#F7F7F9;
+  --surface:#FFFFFF;
+  --raised:#F1F2F6;
+  --ink:#171A21;
+  --text:#3D424E;
+  --muted:#767C8B;
+  --line:#E2E3E9;
+  --amber:#C97A2E;
+  --amber-soft:#EFD9BF;
+  --blue:#3D6FA8;
+  --blue-soft:#CBDCEE;
+  --shadow:0 1px 2px rgba(23,26,33,.05),0 8px 24px -12px rgba(23,26,33,.14);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --ground:#101219;
+    --surface:#171A23;
+    --raised:#1D212C;
+    --ink:#E8E9ED;
+    --text:#B4B8C4;
+    --muted:#7A8092;
+    --line:#262A36;
+    --amber:#E09850;
+    --amber-soft:#4A3722;
+    --blue:#6FA0D8;
+    --blue-soft:#23374D;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 28px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#101219;--surface:#171A23;--raised:#1D212C;--ink:#E8E9ED;--text:#B4B8C4;
+  --muted:#7A8092;--line:#262A36;--amber:#E09850;--amber-soft:#4A3722;--blue:#6FA0D8;
+  --blue-soft:#23374D;--shadow:0 1px 2px rgba(0,0,0,.4),0 8px 28px -12px rgba(0,0,0,.6);
+}
+:root[data-theme="light"]{
+  --ground:#F7F7F9;--surface:#FFFFFF;--raised:#F1F2F6;--ink:#171A21;--text:#3D424E;
+  --muted:#767C8B;--line:#E2E3E9;--amber:#C97A2E;--amber-soft:#EFD9BF;--blue:#3D6FA8;
+  --blue-soft:#CBDCEE;--shadow:0 1px 2px rgba(23,26,33,.05),0 8px 24px -12px rgba(23,26,33,.14);
+}
+
+/* ---- base -------------------------------------------------------------- */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--text);
+  font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  font-size:17px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{
+  font-family:ui-serif,"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  color:var(--ink);
+  font-weight:600;
+  text-wrap:balance;
+  margin:0;
+  letter-spacing:-.01em;
+}
+h1{font-size:clamp(2.1rem,5.2vw,3.4rem);line-height:1.1}
+h2{font-size:clamp(1.5rem,3.2vw,2.05rem);line-height:1.2}
+h3{font-size:1.08rem;line-height:1.35;font-weight:600}
+p{margin:0}
+a{color:var(--ink);text-decoration-color:var(--amber);text-underline-offset:3px}
+a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:2px}
+
+.wrap{max-width:1000px;margin:0 auto;padding:0 28px}
+.prose{max-width:64ch}
+.eyebrow{
+  font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,monospace;
+  font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);margin:0;
+}
+.stack{display:flex;flex-direction:column}
+.gap-8{gap:8px}.gap-14{gap:14px}.gap-20{gap:20px}.gap-28{gap:28px}.gap-40{gap:40px}
+
+section{padding:clamp(56px,8vw,96px) 0;border-top:1px solid var(--line)}
+section:first-of-type{border-top:0}
+
+/* ---- header ------------------------------------------------------------ */
+.masthead{padding:26px 0;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.mark{display:flex;align-items:center;gap:10px;font-family:ui-serif,"Iowan Old Style",Palatino,Georgia,serif;font-size:1.05rem;color:var(--ink);font-weight:600;letter-spacing:-.01em}
+.mark-dot{width:11px;height:11px;border-radius:50%;background:var(--amber);flex:none}
+.masthead .meta{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+/* ---- hero -------------------------------------------------------------- */
+.hero{padding-top:clamp(28px,5vw,52px)}
+.hero-grid{display:grid;grid-template-columns:1fr;gap:clamp(36px,5vw,64px);align-items:center}
+@media (min-width:900px){.hero-grid{grid-template-columns:1.05fr .95fr}}
+.lede{font-size:1.14rem;color:var(--text);max-width:52ch}
+.cta-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px 18px;margin-top:4px}
+.btn{
+  display:inline-flex;align-items:center;gap:9px;
+  background:var(--amber);color:#fff;
+  padding:13px 22px;border-radius:7px;
+  font-size:.95rem;font-weight:600;text-decoration:none;
+  border:1px solid transparent;
+  transition:transform .15s ease,filter .15s ease;
+}
+.btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.btn-note{font-size:.85rem;color:var(--muted)}
+
+/* ---- day chart --------------------------------------------------------- */
+.card{
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  padding:26px 26px 22px;box-shadow:var(--shadow);
+}
+.card-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:22px}
+.card-title{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.7rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.chart{display:flex;flex-direction:column;gap:18px}
+.row{display:grid;grid-template-columns:64px 1fr;align-items:center;gap:14px}
+.row-day{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.76rem;color:var(--muted);letter-spacing:.04em}
+.bars{display:flex;flex-direction:column;gap:5px}
+.bar{height:11px;border-radius:3px;position:relative;transform-origin:left center}
+.bar-planned{background:var(--amber-soft)}
+.bar-worked{background:var(--blue-soft)}
+.bar span{position:absolute;inset:0;border-radius:3px;display:block;transform-origin:left center}
+.bar-planned span{background:var(--amber);opacity:.85}
+.bar-worked span{background:var(--blue)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.key{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--muted)}
+.swatch{width:11px;height:11px;border-radius:3px;flex:none}
+.tnum{font-variant-numeric:tabular-nums}
+
+@media (prefers-reduced-motion:no-preference){
+  .bar span{animation:grow .9s cubic-bezier(.22,.61,.36,1) both}
+  @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+}
+
+/* ---- gap section ------------------------------------------------------- */
+.pull{
+  font-family:ui-serif,"Iowan Old Style",Palatino,Georgia,serif;
+  font-size:clamp(1.3rem,2.6vw,1.65rem);line-height:1.4;color:var(--ink);
+  border-left:2px solid var(--amber);padding-left:22px;max-width:44ch;
+}
+
+/* ---- movements --------------------------------------------------------- */
+.movements{display:grid;grid-template-columns:1fr;gap:34px}
+@media (min-width:800px){.movements{grid-template-columns:repeat(3,1fr);gap:38px}}
+.movement{display:flex;flex-direction:column;gap:11px;padding-top:20px;border-top:2px solid var(--amber)}
+.movement:nth-child(2){border-top-color:var(--blue)}
+.movement:nth-child(3){border-top-color:var(--muted)}
+.movement p{font-size:.96rem}
+
+/* ---- feature list ------------------------------------------------------ */
+.features{display:grid;grid-template-columns:1fr;gap:2px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+@media (min-width:700px){.features{grid-template-columns:1fr 1fr}}
+.feature{background:var(--surface);padding:22px 24px;display:flex;flex-direction:column;gap:7px}
+.feature h3{font-family:ui-sans-serif,-apple-system,"SF Pro Text",sans-serif;font-size:.96rem;color:var(--ink)}
+.feature p{font-size:.9rem;color:var(--muted);line-height:1.55}
+
+/* ---- privacy ----------------------------------------------------------- */
+.plain{border:1px solid var(--line);border-radius:10px;padding:26px 28px;background:var(--raised)}
+.plain ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:11px}
+.plain li{font-size:.95rem}
+.plain strong{color:var(--ink);font-weight:600}
+.fineprint{font-size:.86rem;color:var(--muted);margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+
+/* ---- download ---------------------------------------------------------- */
+.download{text-align:center;display:flex;flex-direction:column;align-items:center;gap:18px}
+.reqs{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.78rem;color:var(--muted);letter-spacing:.03em}
+
+/* ---- footer ------------------------------------------------------------ */
+footer{padding:34px 0 52px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:12px 26px;align-items:center;justify-content:space-between}
+footer p{font-size:.85rem;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="mark"><span class="mark-dot"></span>VerseDay</div>
+    <div class="meta">Free · macOS</div>
+  </header>
+</div>
+
+<!-- ============================ HERO ============================ -->
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div class="stack gap-20">
+        <p class="eyebrow">A day, measured honestly</p>
+        <h1>Know where the day actually went.</h1>
+        <p class="lede">
+          VerseDay plans your day, times the work you really do, and closes it out properly.
+          The distance between what you intended and what happened stops being a feeling
+          and becomes a number you can look at.
+        </p>
+        <div class="cta-row">
+          <a class="btn" href="https://github.com/n-gallinelli/verseday-releases/releases/latest">Download for Mac</a>
+          <span class="btn-note">Free. No account. Nothing to cancel.</span>
+        </div>
+      </div>
+
+      <div class="card" aria-label="A week of planned versus worked time">
+        <div class="card-head">
+          <span class="card-title">This week</span>
+          <span class="card-title tnum">18h 05m worked</span>
+        </div>
+        <div class="chart">
+          <div class="row">
+            <span class="row-day">MON</span>
+            <div class="bars">
+              <div class="bar bar-planned"><span style="animation-delay:.05s;width:88%"></span></div>
+              <div class="bar bar-worked"><span style="animation-delay:.10s;width:61%"></span></div>
+            </div>
+          </div>
+          <div class="row">
+            <span class="row-day">TUE</span>
+            <div class="bars">
+              <div class="bar bar-planned"><span style="animation-delay:.13s;width:72%"></span></div>
+              <div class="bar bar-worked"><span style="animation-delay:.18s;width:70%"></span></div>
+            </div>
+          </div>
+          <div class="row">
+            <span class="row-day">WED</span>
+            <div class="bars">
+              <div class="bar bar-planned"><span style="animation-delay:.21s;width:95%"></span></div>
+              <div class="bar bar-worked"><span style="animation-delay:.26s;width:44%"></span></div>
+            </div>
+          </div>
+          <div class="row">
+            <span class="row-day">THU</span>
+            <div class="bars">
+              <div class="bar bar-planned"><span style="animation-delay:.29s;width:66%"></span></div>
+              <div class="bar bar-worked"><span style="animation-delay:.34s;width:72%"></span></div>
+            </div>
+          </div>
+          <div class="row">
+            <span class="row-day">FRI</span>
+            <div class="bars">
+              <div class="bar bar-planned"><span style="animation-delay:.37s;width:54%"></span></div>
+              <div class="bar bar-worked"><span style="animation-delay:.42s;width:39%"></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="legend">
+          <span class="key"><span class="swatch" style="background:var(--amber)"></span>Planned</span>
+          <span class="key"><span class="swatch" style="background:var(--blue)"></span>Actually worked</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ THE GAP ============================ -->
+<section>
+  <div class="wrap stack gap-28">
+    <p class="eyebrow">The problem</p>
+    <div class="hero-grid">
+      <div class="stack gap-20 prose">
+        <h2>Most days end without a verdict.</h2>
+        <p>
+          You start with a plan. Then a meeting moves, something urgent lands, and by six
+          o'clock the plan is a document you no longer recognise. You were busy. You can't
+          say what you finished.
+        </p>
+        <p>
+          VerseDay times the work itself — a running clock on the task in front of you, not
+          a guess you reconstruct at the end of the week. When you close the day, you see
+          both numbers side by side.
+        </p>
+      </div>
+      <p class="pull">
+        Wednesday you planned six hours of deep work and got two and a half.
+        That's not a failure. It's the first useful thing you've learned about
+        your Wednesdays.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ HOW IT WORKS ============================ -->
+<section>
+  <div class="wrap stack gap-40">
+    <div class="stack gap-14 prose">
+      <p class="eyebrow">How it works</p>
+      <h2>Three moments in a working day.</h2>
+    </div>
+    <div class="movements">
+      <article class="movement">
+        <p class="eyebrow">Morning</p>
+        <h3>Plan the day</h3>
+        <p>
+          Pull in today's calendar, add what actually matters, and give each task an
+          estimate. Group work under objectives so you can see which ones you're
+          genuinely moving.
+        </p>
+      </article>
+      <article class="movement">
+        <p class="eyebrow">Midday</p>
+        <h3>Time the work</h3>
+        <p>
+          Start a task and a small timer floats above whatever you're doing. Take a
+          break and it waits. Nothing to remember, nothing to reconstruct — the clock
+          is running on the real thing.
+        </p>
+      </article>
+      <article class="movement">
+        <p class="eyebrow">Evening</p>
+        <h3>Close it out</h3>
+        <p>
+          A short shutdown: what you finished, what moved, where the hours went. The day
+          ends deliberately instead of trailing off, and tomorrow starts from something
+          true.
+        </p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ FEATURES ============================ -->
+<section>
+  <div class="wrap stack gap-28">
+    <div class="stack gap-14 prose">
+      <p class="eyebrow">What's in it</p>
+      <h2>Built for one job, done properly.</h2>
+    </div>
+    <div class="features">
+      <div class="feature">
+        <h3>A timer that follows you</h3>
+        <p>A compact always-on-top window shows the running task and elapsed time, wherever you're working.</p>
+      </div>
+      <div class="feature">
+        <h3>Your calendar, already there</h3>
+        <p>Today's meetings import straight from macOS Calendar, so your plan accounts for the time you've already committed.</p>
+      </div>
+      <div class="feature">
+        <h3>Capture without switching</h3>
+        <p>A global shortcut opens a small bar anywhere in macOS. Type the thought, hit return, carry on.</p>
+      </div>
+      <div class="feature">
+        <h3>Objectives, not just lists</h3>
+        <p>Tasks roll up into the things you're actually trying to move, so a busy week is measurable against something.</p>
+      </div>
+      <div class="feature">
+        <h3>Notes and files on the task</h3>
+        <p>Keep the link, the screenshot and the half-thought with the work they belong to.</p>
+      </div>
+      <div class="feature">
+        <h3>Breaks that are real breaks</h3>
+        <p>Start a break and the clock stops. Rest counted as work is the fastest way to make the numbers lie.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== WHY I BUILT IT — NICK: REPLACE THIS WITH YOUR OWN WORDS ====== -->
+<section>
+  <div class="wrap stack gap-20 prose">
+    <p class="eyebrow">Why I built it</p>
+    <h2>I kept finishing weeks I couldn't account for.</h2>
+    <p>
+      I'd plan a day properly, work hard through it, and still get to Friday unable to say
+      where the time had gone. Every tool I tried wanted me to estimate in advance and
+      report afterwards — two guesses, neither of them the truth.
+    </p>
+    <p>
+      So I built the thing I wanted: something that plans the day, runs a real clock on the
+      work, and makes me close the day out before I walk away from it. It's the app I open
+      first thing and last thing, every working day.
+    </p>
+    <p>
+      It's free because it was never meant to be a business. It runs entirely on your Mac
+      because that's where I wanted my own data to stay.
+    </p>
+    <p style="color:var(--muted);font-size:.95rem">— Nick</p>
+  </div>
+</section>
+
+<!-- ============================ PRIVACY ============================ -->
+<section>
+  <div class="wrap stack gap-28">
+    <div class="stack gap-14 prose">
+      <p class="eyebrow">Your data</p>
+      <h2>It stays on your Mac.</h2>
+    </div>
+    <div class="plain">
+      <ul>
+        <li><strong>No account and no sign-in.</strong> You download it and open it.</li>
+        <li><strong>No cloud and no sync.</strong> Everything lives in a single database file on your own machine, which you can export or back up whenever you like.</li>
+        <li><strong>Nothing is sold, shared or analysed.</strong> There is no analytics service, no crash reporter and no tracking of any kind.</li>
+        <li><strong>VerseDay checks for a new version automatically.</strong> That check sends no version number, no platform, no identifier and no personal data. The request reaches GitHub, which records an IP address and a browser identifier the way any web request does. This check can't currently be switched off.</li>
+        <li><strong>Updates are cryptographically signed</strong> and the app refuses anything that isn't signed with the right key.</li>
+      </ul>
+      <p class="fineprint">
+        Calendar access is optional and only used to read today's events onto your plan.
+        VerseDay never writes to your calendar.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ DOWNLOAD ============================ -->
+<section>
+  <div class="wrap download">
+    <p class="eyebrow">Get it</p>
+    <h2>Try one honest day.</h2>
+    <p class="prose" style="text-align:center">
+      Plan tomorrow tonight, run the clock through the day, and close it out. One day is
+      enough to see whether the numbers tell you something.
+    </p>
+    <a class="btn" href="https://github.com/n-gallinelli/verseday-releases/releases/latest">Download for Mac</a>
+    <p class="reqs">macOS 14 or later · Apple silicon &amp; Intel · signed and notarised</p>
+  </div>
+</section>
+
+<div class="wrap">
+  <footer>
+    <p>VerseDay — made by Nick Gallinelli</p>
+    <p><a href="https://github.com/n-gallinelli/verseday-releases/issues">Report a problem</a></p>
+  </footer>
+</div>
+
+</body>
+</html>
